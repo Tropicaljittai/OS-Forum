@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <stdbool.h>
-#define LOWER_NUM 1
-#define UPPER_NUM 10000
 #define BUFFER_SIZE 100
 #define MAX_COUNT 10000
 
@@ -15,14 +13,15 @@ int finished = false;
 void *producer(void *arg) {
     FILE *file = fopen("all.txt", "w");
     for (int i = 0; i < MAX_COUNT; i++) {
-        int number = rand() % (UPPER_NUM - LOWER_NUM + 1) + LOWER_NUM;
+        int number = rand() % 10000 + 1;
         while(bufferCounter >= BUFFER_SIZE){
             //...
         };
         pthread_mutex_lock(&lock);
         bufferArr[bufferCounter++] = number;
         if (file != NULL) {
-            fprintf(file, "%d\n", number);  
+            perror("Error: File is NULL!");
+            exit(EXIT_FAILURE); 
         }
         pthread_mutex_unlock(&lock);
     }
@@ -33,7 +32,7 @@ void *producer(void *arg) {
 void *customer(void *arg) {
     int parity = *((int *)arg);
     char filename[20];
-    sprintf(filename, "%s.txt", parity ? "odd" : "even");
+    sprintf(filename, "%s.txt", (parity == 0) ? "odd" : "even");
     FILE *file = fopen(filename, "w");
 
     while (true) {
@@ -48,7 +47,8 @@ void *customer(void *arg) {
             if ((number % 2) == parity) {
                 bufferCounter--;
                 if (file != NULL) {
-                    fprintf(file, "%d\n", number);
+                    perror("Error: File is NULL!");
+                    exit(EXIT_FAILURE);
                 }
             }
         }
